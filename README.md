@@ -53,7 +53,7 @@
 
 ## Network Training
 
-Train your own two-hand interaction diffusion model using the following command. Note that the pre-trained weights can be downloaded from [this Google Drive link (coming soon)](https://drive.google.com/drive/folders/1Kpoj1WW37hHvYgvhkwfmxNZVgPlyaApQ?usp=sharing). 
+Train your own two-hand interaction diffusion model using the following command. Note that the pre-trained weights can be downloaded from [this Google Drive link](https://drive.google.com/drive/folders/1Kpoj1WW37hHvYgvhkwfmxNZVgPlyaApQ?usp=sharing). 
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --train </pre></code>
 
