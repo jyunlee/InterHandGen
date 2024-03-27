@@ -6,7 +6,7 @@
 
 <sup>1 </sup>KAIST,  <sup>2</sup> Codec Avatars Lab, Meta,  <sup>3</sup> Imperial College London
 
-**[\[Project Page\]](https://jyunlee.github.io/projects/interhandgen/) [\[Paper (Coming Soon)\]](https://github.com/jyunlee/InterHandGen) [\[Supplementary Video\]](https://youtu.be/DMGuQnHB5fg?feature=shared)**
+**[\[Project Page\]](https://jyunlee.github.io/projects/interhandgen/) [\[Paper\]](https://arxiv.org/abs/2403.17422) [\[Supplementary Video\]](https://youtu.be/DMGuQnHB5fg?feature=shared)**
 
 <p align="center">
   <img src="teaser.gif" alt="animated" width="1000px"/>
