@@ -81,7 +81,7 @@ Compute the evaluation metrics using the sampled two-hand interactions.
 If you find this work useful, please consider citing our paper.
 
 ```
-@InProceedings{lee2024interhandgen,
+@inproceedings{lee2024interhandgen,
     title = {InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion},
     author = {Lee, Jihyun and Saito, Shunsuke and Nam, Giljoo and Sung, Minhyuk and Kim, Tae-Kyun},
     booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
