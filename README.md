@@ -1,6 +1,6 @@
-# InterHandGen
+# 🤝 InterHandGen
 
-## 🤝 InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion (CVPR 2024) ##
+## InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion (CVPR 2024) ##
 
 [Jihyun Lee](https://jyunlee.github.io/)<sup>1</sup>, [Shunsuke Saito](https://shunsukesaito.github.io/)<sup>2</sup>, [Giljoo Nam](https://sites.google.com/view/gjnam)<sup>2</sup>, [Minhyuk Sung](https://mhsung.github.io/)<sup>1</sup>, [Tae-Kyun (T-K) Kim](https://sites.google.com/view/tkkim/home)<sup>1,3</sup>
 
