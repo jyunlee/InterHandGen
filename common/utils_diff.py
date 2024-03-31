@@ -121,82 +121,70 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, guida
         x0_t = cond_x0_t + cf_scale * (cond_x0_t - uncond_x0_t)
         x0_t[:, :-9] = cond_x0_t[:, :-9]
 
-        grad_list = []
+        if diffhand.config.testing.anti_pen:
+            grad_list = []
 
-        # penetration guidance
-        for sample_idx in tqdm(range(x0_t.shape[0])):
+            # penetration guidance
+            for sample_idx in tqdm(range(x0_t.shape[0])):
 
-            x0_t_ = x0_t[sample_idx].clone().unsqueeze(0).requires_grad_()
-            cond_ = cond[sample_idx].clone().unsqueeze(0)
+                x0_t_ = x0_t[sample_idx].clone().unsqueeze(0).requires_grad_()
+                cond_ = cond[sample_idx].clone().unsqueeze(0)
 
-            anc_handV, add_handV, _, _ = diffhand.mano_forward(cond_, x0_t_, return_verts=True)
-            anc_handF = torch.Tensor(diffhand.mano_layer['left'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(anc_handV.shape[0], dim=0).cuda()
+                anc_handV, add_handV, _, _ = diffhand.mano_forward(cond_, x0_t_, return_verts=True)
+                anc_handF = torch.Tensor(diffhand.mano_layer['left'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(anc_handV.shape[0], dim=0).cuda()
 
-            anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
+                anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
 
-            add_handF = torch.Tensor(diffhand.mano_layer['right'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(add_handV.shape[0], dim=0).cuda()
-            add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
+                add_handF = torch.Tensor(diffhand.mano_layer['right'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(add_handV.shape[0], dim=0).cuda()
+                add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
 
-            if diffhand.subdiv_add is None:
-                diffhand.subdiv_add = SubdivideMeshes(add_hand_mesh[0])
+                if diffhand.subdiv_add is None:
+                    diffhand.subdiv_add = SubdivideMeshes(add_hand_mesh[0])
 
-            for _ in range(2):
-                add_hand_mesh = diffhand.subdiv_add.subdivide_homogeneous(add_hand_mesh)
+                for _ in range(2):
+                    add_hand_mesh = diffhand.subdiv_add.subdivide_homogeneous(add_hand_mesh)
 
-            add_handV = torch.stack(add_hand_mesh.verts_list())
-            add_handF = torch.stack(add_hand_mesh.faces_list())
-            add_handF = torch.repeat_interleave(add_handF, add_handV.shape[0], dim=0)
+                add_handV = torch.stack(add_hand_mesh.verts_list())
+                add_handF = torch.stack(add_hand_mesh.faces_list())
+                add_handF = torch.repeat_interleave(add_handF, add_handV.shape[0], dim=0)
 
-            add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
+                add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
 
-            add_handVN = add_hand_mesh.verts_normals_padded()
+                add_handVN = add_hand_mesh.verts_normals_padded()
 
-            if diffhand.subdiv is None:
-                diffhand.subdiv = SubdivideMeshes(anc_hand_mesh[0])
+                if diffhand.subdiv is None:
+                    diffhand.subdiv = SubdivideMeshes(anc_hand_mesh[0])
 
-            for _ in range(2):
-                anc_hand_mesh = diffhand.subdiv.subdivide_homogeneous(anc_hand_mesh)
+                for _ in range(2):
+                    anc_hand_mesh = diffhand.subdiv.subdivide_homogeneous(anc_hand_mesh)
 
-            anc_handV = torch.stack(anc_hand_mesh.verts_list())
-            anc_handF = torch.stack(anc_hand_mesh.faces_list())
-            anc_handF = torch.repeat_interleave(anc_handF, anc_handV.shape[0], dim=0)
+                anc_handV = torch.stack(anc_hand_mesh.verts_list())
+                anc_handF = torch.stack(anc_hand_mesh.faces_list())
+                anc_handF = torch.repeat_interleave(anc_handF, anc_handV.shape[0], dim=0)
 
-            anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
-            anc_handVN = anc_hand_mesh.verts_normals_padded()
+                anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
+                anc_handVN = anc_hand_mesh.verts_normals_padded()
 
-            distChamfer = chamferDist()
-            contact_robustifier = GMoF_unscaled(rho = 5e-2)
+                distChamfer = chamferDist()
+                contact_robustifier = GMoF_unscaled(rho = 5e-2)
 
-            collide_ids_add, collide_ids_anchor = \
-                    collision_check(anc_handV, anc_handVN, add_handV, distChamfer)
+                collide_ids_add, collide_ids_anchor = \
+                        collision_check(anc_handV, anc_handVN, add_handV, distChamfer)
 
-            if collide_ids_add is not None:
-                loss_col = contact_robustifier((add_handV[collide_ids_add[0], collide_ids_add[1]] -
-                anc_handV[collide_ids_anchor[0], collide_ids_anchor[1]])).mean() 
+                if collide_ids_add is not None:
+                    loss_col = contact_robustifier((add_handV[collide_ids_add[0], collide_ids_add[1]] -
+                    anc_handV[collide_ids_anchor[0], collide_ids_anchor[1]])).mean() 
 
-                grad_col = grad(outputs=loss_col, inputs=x0_t_, retain_graph=True)[0]
-            else:
-                grad_col = torch.zeros_like(x0_t_)
+                    grad_col = grad(outputs=loss_col, inputs=x0_t_, retain_graph=True)[0]
+                else:
+                    grad_col = torch.zeros_like(x0_t_)
 
-            '''
-            collide_ids_add, collide_ids_anchor = \
-                    collision_check(add_handV, add_handVN, anc_handV, distChamfer)
+                grad_list.append(grad_col)
+            
+            tot_grad_col = torch.cat(grad_list, 0)
 
-            if collide_ids_add is not None:
-                loss_col = contact_robustifier((anc_handV[collide_ids_add[0], collide_ids_add[1]] -
-                add_handV[collide_ids_anchor[0], collide_ids_anchor[1]])).mean()
-
-                grad_col += grad(outputs=loss_col, inputs=x0_t_)[0]
-            else:
-                grad_col += 0.
-            '''
-
-            grad_list.append(grad_col)
-        
-        tot_grad_col = torch.cat(grad_list, 0)
-
-        scale = guidance_weights[idx]
-        x0_t = x0_t - scale * tot_grad_col
+            scale = guidance_weights[idx]
+            x0_t = x0_t - scale * tot_grad_col
 
         et = x0_t - xt
 

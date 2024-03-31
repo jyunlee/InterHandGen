@@ -41,6 +41,7 @@ testing:
     vis: True
     vis_batch: 250
     vis_epoch: 4
+    anti_pen: False
 
 optim:
     decay: 20
