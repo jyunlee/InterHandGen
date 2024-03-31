@@ -65,15 +65,14 @@ Sample two-hand interactions from the trained model.
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --model_path {<i>trained_model_path</i>} </pre></code>
 
+&nbsp;
 
 <details>
   <summary><b>📌 Note on anti-penetration guidance (APG)</b></summary>
+&nbsp;
 
-In the current code version, APG significantly increases sampling time due to the per-sample gradient computations, thus it is suppressed in the default setting. If you want to use APG, set `anti_pen` to `True` by modifying the config file (`configs/default.yml`). I will try to optimize this code part soon.
-
+<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations, thus it is suppressed in the default setting. If you want to use APG, set `anti_pen` to `True` by modifying the config file (`configs/default.yml`). I will try to optimize this code part soon.</i>
 </details>
-
-
 &nbsp;
 
 ## Evaluation
