@@ -61,7 +61,7 @@ Train your own two-hand interaction diffusion model using the following command.
 
 ## Network Inference
 
-Sample two-hand interactions from the trained model. 
+Sample two-hand interactions from the trained model. The number of samples can be controlled by `vis_epoch` (number of iterations in sampling) and `vis_batch` (number of samples for each iteration) in the config file (`configs/default.yml`). For example, setting `vis_epoch = 4` and `vis_batch = 250` will lead to the generation of 4 * 250 = 1000 samples.
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --model_path {<i>trained_model_path</i>} </pre></code>
 
