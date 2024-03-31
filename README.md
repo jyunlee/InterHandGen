@@ -69,7 +69,7 @@ Sample two-hand interactions from the trained model. The number of samples can b
   <summary>📌 Note on anti-penetration guidance (APG)</summary>
 &nbsp;
 
-<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations. To suppress APG, set `anti_pen` to `False` by modifying the config file (`configs/default.yml`). I will try to optimize this code part soon. If you use PyTorch 2.x, you can simply set `is_grads_batched=True` when calling `torch.autograd.grad` and remove the for-loop over the individual samples.</i>
+<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations. To suppress APG, set `anti_pen` to `False` by modifying the config file (`configs/default.yml`). If you use PyTorch 2.x, you can simply set `is_grads_batched=True` when calling `torch.autograd.grad` and remove the for-loop over the individual samples.</i>
 </details>
 &nbsp;
 
