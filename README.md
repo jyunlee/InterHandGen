@@ -1,12 +1,12 @@
-# InterHandGen
+# 🤝 InterHandGen
 
-## 🤝 InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion (CVPR 2024) ##
+## InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion (CVPR 2024) ##
 
 [Jihyun Lee](https://jyunlee.github.io/)<sup>1</sup>, [Shunsuke Saito](https://shunsukesaito.github.io/)<sup>2</sup>, [Giljoo Nam](https://sites.google.com/view/gjnam)<sup>2</sup>, [Minhyuk Sung](https://mhsung.github.io/)<sup>1</sup>, [Tae-Kyun (T-K) Kim](https://sites.google.com/view/tkkim/home)<sup>1,3</sup>
 
 <sup>1 </sup>KAIST,  <sup>2</sup> Codec Avatars Lab, Meta,  <sup>3</sup> Imperial College London
 
-**[\[Project Page\]](https://jyunlee.github.io/projects/interhandgen/) [\[Paper (Coming Soon)\]](https://github.com/jyunlee/InterHandGen) [\[Supplementary Video\]](https://youtu.be/DMGuQnHB5fg?feature=shared)**
+**[\[Project Page\]](https://jyunlee.github.io/projects/interhandgen/) [\[Paper\]](https://arxiv.org/abs/2403.17422) [\[Supplementary Video\]](https://youtu.be/DMGuQnHB5fg?feature=shared)**
 
 <p align="center">
   <img src="teaser.gif" alt="animated" width="1000px"/>
@@ -53,7 +53,7 @@
 
 ## Network Training
 
-Train your own two-hand interaction diffusion model using the following command. Note that the pre-trained weights can be downloaded from [this Google Drive link](https://drive.google.com/drive/folders/1Kpoj1WW37hHvYgvhkwfmxNZVgPlyaApQ?usp=sharing). 
+Train your own two-hand interaction diffusion model using the following command. Note that the pre-trained weights can be downloaded from [this Google Drive link](https://drive.google.com/drive/folders/19Hbfuy7Vg2UVLMNMHbsMKApOS07EZ0lL?usp=drive_link). 
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --train </pre></code>
 
@@ -81,7 +81,7 @@ Compute the evaluation metrics using the sampled two-hand interactions.
 If you find this work useful, please consider citing our paper.
 
 ```
-@InProceedings{lee2024interhandgen,
+@inproceedings{lee2024interhandgen,
     title = {InterHandGen: Two-Hand Interaction Generation via Cascaded Reverse Diffusion},
     author = {Lee, Jihyun and Saito, Shunsuke and Nam, Giljoo and Sung, Minhyuk and Kim, Tae-Kyun},
     booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
