@@ -39,9 +39,9 @@ testing:
     test_timesteps: 42 
     test_num_diffusion_timesteps: 126 
     vis: True
-    vis_batch: 250
-    vis_epoch: 4
-    anti_pen: False
+    vis_batch: 100
+    vis_epoch: 1
+    anti_pen: True
 
 optim:
     decay: 20

@@ -351,6 +351,7 @@ class Diffhand(object):
         lr_init, decay, gamma = self.config.optim.lr, self.config.optim.decay, self.config.optim.lr_gamma
 
         for epoch in range(start_epoch, self.config.training.n_epochs):
+            print(f'[Test epoch] {epoch+1} / {n_epochs}') 
             data_start = time.time()
             data_time = 0
 
@@ -582,7 +583,7 @@ class Diffhand(object):
 
                 total_manos[i].export(f'{mesh_dir}/mesh_{i}.obj')
 
-                imgs, alphas = self.renderer.render(verts=torch.repeat_interleave(torch.Tensor(pred_manos[i].vertices * 0.5).unsqueeze(0), self.n_views, 0), faces=torch.repeat_interleave(torch.Tensor(pred_manos[i].faces).unsqueeze(0), self.n_views, 0), cameras=self.cameras, textures=self.texture, lights=self.point_lights)
+                imgs, alphas = self.renderer.render(verts=torch.repeat_interleave(torch.Tensor(total_manos[i].vertices * 0.5).unsqueeze(0), self.n_views, 0), faces=torch.repeat_interleave(torch.Tensor(total_manos[i].faces).unsqueeze(0), self.n_views, 0), cameras=self.cameras, textures=self.texture, lights=self.point_lights)
 
                 res_imgs = []
 

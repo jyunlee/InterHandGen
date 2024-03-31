@@ -71,20 +71,18 @@ def generalized_steps(x, cond, seq, model, b, **kwargs):
             at_next = compute_alpha(b, next_t.long()).squeeze(-1)
             xt = xs[-1]
             x0_t = model(xt, t.float(), cond.float())
-            et = x0_t - xt
-
             x0_preds.append(x0_t)
             c1 = (
                 kwargs.get("eta", 0) * ((1 - at / at_next) * (1 - at_next) / (1 - at)).sqrt()
             )
             c2 = ((1 - at_next) - c1 ** 2).sqrt()
-            xt_next = at_next.sqrt() * x0_t + c1 * torch.randn_like(x) + c2 * et
+            xt_next = at_next.sqrt() * x0_t + c1 * torch.randn_like(x) + c2 * (x0_t - xt)
             xs.append(xt_next)
 
     return xs, x0_preds
 
 
-def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, guidance_scale=14, **kwargs):
+def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, **kwargs):
 
     n = x.size(0)
     seq_next = [-1] + list(seq[:-1])
@@ -121,10 +119,11 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, guida
         x0_t = cond_x0_t + cf_scale * (cond_x0_t - uncond_x0_t)
         x0_t[:, :-9] = cond_x0_t[:, :-9]
 
-        if diffhand.config.testing.anti_pen:
-            grad_list = []
+        grad_list = []
 
-            # penetration guidance
+        # penetration guidance
+        if diffhand.config.testing.anti_pen:
+            print(f' - Computing APG (step {idx+1}/{len(seq)})')
             for sample_idx in tqdm(range(x0_t.shape[0])):
 
                 x0_t_ = x0_t[sample_idx].clone().unsqueeze(0).requires_grad_()
@@ -184,9 +183,12 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, guida
             tot_grad_col = torch.cat(grad_list, 0)
 
             scale = guidance_weights[idx]
-            x0_t = x0_t - scale * tot_grad_col
 
-        et = x0_t - xt
+            # use a low scale for the last iter
+            if idx == len(seq) - 1:
+                scale /= 10
+                
+            x0_t = x0_t - scale * tot_grad_col * 100
 
         x0_preds.append(x0_t)
 
@@ -194,7 +196,7 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, guida
             kwargs.get("eta", 0) * ((1 - at / at_next) * (1 - at_next) / (1 - at)).sqrt()
         )
         c2 = ((1 - at_next) - c1 ** 2).sqrt()
-        xt_next = at_next.sqrt() * x0_t + c1 * torch.randn_like(x) + c2 * et
+        xt_next = at_next.sqrt() * x0_t + c1 * torch.randn_like(x) + c2 * (x0_t - xt)
         xs.append(xt_next)
 
     return xs, x0_preds
