@@ -61,7 +61,7 @@ Train your own two-hand interaction diffusion model using the following command.
 
 ## Network Inference
 
-Sample two-hand interactions from the trained model. The number of samples can be controlled by `vis_epoch` (number of iterations in sampling) and `vis_batch` (number of samples for each iteration) in the config file (`configs/default.yml`). For example, setting `vis_epoch = 4` and `vis_batch = 250` will lead to the generation of 4 * 250 = 1000 samples.
+Sample two-hand interactions from the trained model. The number of samples can be controlled by `vis_epoch` (number of iterations in sampling) and `vis_batch` (number of samples for each iteration) in the config file (`configs/default.yml`). For a full evaluation, set `vis_epoch = 4` and `vis_batch = 2500` to generate 4 * 2500 = 10000 samples.
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --model_path {<i>trained_model_path</i>} </pre></code>
 
@@ -69,7 +69,7 @@ Sample two-hand interactions from the trained model. The number of samples can b
   <summary>📌 Note on anti-penetration guidance (APG)</summary>
 &nbsp;
 
-<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations, thus it is suppressed in the default setting. If you want to use APG, set `anti_pen` to `True` by modifying the config file (`configs/default.yml`). I will try to optimize this code part soon.</i>
+<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations. To suppress APG, set `anti_pen` to `False` by modifying the config file (`configs/default.yml`). I will try to optimize this code part soon. If you use PyTorch 2.x, you can simply set `is_grads_batched=True` when calling `torch.autograd.grad` and remove the for-loop over the individual samples.</i>
 </details>
 &nbsp;
 
