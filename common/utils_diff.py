@@ -3,6 +3,7 @@ from __future__ import absolute_import, division
 import os
 import torch
 import numpy as np
+import importlib
 from torch.autograd import grad
 from pytorch3d.structures import Meshes, Pointclouds
 from pytorch3d.transforms import (
@@ -89,10 +90,10 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, **kwa
     x0_preds = []
     xs = [x]
     
-    guidance_weights = [20]
+    guidance_weights = [7]
 
     for i in range(len(seq)-1):
-        guidance_weights.append(guidance_weights[-1] * 0.98)
+        guidance_weights.append(guidance_weights[-1] * 0.9)
 
     guidance_weights.reverse()
 
@@ -102,8 +103,8 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, **kwa
 
     idx = -1
     for i, j in zip(reversed(seq), reversed(seq_next)):
-
         idx += 1
+        print(f' - Reverse Diffusion (step {idx+1}/{len(seq)})')
 
         t = (torch.ones(n) * i).cuda()
         next_t = (torch.ones(n) * j).cuda()
@@ -123,72 +124,63 @@ def cond_generalized_steps(x, cond, seq, model, b, diffhand, cf_scale=0.1, **kwa
 
         # penetration guidance
         if diffhand.config.testing.anti_pen:
-            print(f' - Computing APG (step {idx+1}/{len(seq)})')
-            for sample_idx in tqdm(range(x0_t.shape[0])):
 
-                x0_t_ = x0_t[sample_idx].clone().unsqueeze(0).requires_grad_()
-                cond_ = cond[sample_idx].clone().unsqueeze(0)
+            x0_t_ = x0_t.clone().requires_grad_()
+            cond_ = cond.clone()
 
-                anc_handV, add_handV, _, _ = diffhand.mano_forward(cond_, x0_t_, return_verts=True)
-                anc_handF = torch.Tensor(diffhand.mano_layer['left'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(anc_handV.shape[0], dim=0).cuda()
+            anc_handV, add_handV, _, _ = diffhand.mano_forward(cond_, x0_t_, return_verts=True)
+            anc_handF = torch.Tensor(diffhand.mano_layer['left'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(anc_handV.shape[0], dim=0).cuda()
 
-                anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
+            anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
 
-                add_handF = torch.Tensor(diffhand.mano_layer['right'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(add_handV.shape[0], dim=0).cuda()
-                add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
+            add_handF = torch.Tensor(diffhand.mano_layer['right'].get_faces().astype(int)).unsqueeze(0).repeat_interleave(add_handV.shape[0], dim=0).cuda()
+            add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
 
-                if diffhand.subdiv_add is None:
-                    diffhand.subdiv_add = SubdivideMeshes(add_hand_mesh[0])
+            add_handVN = add_hand_mesh.verts_normals_padded()
+            anc_handVN = anc_hand_mesh.verts_normals_padded()
 
-                for _ in range(2):
-                    add_hand_mesh = diffhand.subdiv_add.subdivide_homogeneous(add_hand_mesh)
+            distChamfer = chamferDist()
+            contact_robustifier = GMoF_unscaled(rho = 5e-2)
 
-                add_handV = torch.stack(add_hand_mesh.verts_list())
-                add_handF = torch.stack(add_hand_mesh.faces_list())
-                add_handF = torch.repeat_interleave(add_handF, add_handV.shape[0], dim=0)
+            loss_col = 0.
 
-                add_hand_mesh = Meshes(verts=add_handV, faces=add_handF)
-
-                add_handVN = add_hand_mesh.verts_normals_padded()
-
-                if diffhand.subdiv is None:
-                    diffhand.subdiv = SubdivideMeshes(anc_hand_mesh[0])
-
-                for _ in range(2):
-                    anc_hand_mesh = diffhand.subdiv.subdivide_homogeneous(anc_hand_mesh)
-
-                anc_handV = torch.stack(anc_hand_mesh.verts_list())
-                anc_handF = torch.stack(anc_hand_mesh.faces_list())
-                anc_handF = torch.repeat_interleave(anc_handF, anc_handV.shape[0], dim=0)
-
-                anc_hand_mesh = Meshes(verts=anc_handV, faces=anc_handF)
-                anc_handVN = anc_hand_mesh.verts_normals_padded()
-
-                distChamfer = chamferDist()
-                contact_robustifier = GMoF_unscaled(rho = 5e-2)
-
+            for i in range(anc_handV.shape[0]):
                 collide_ids_add, collide_ids_anchor = \
-                        collision_check(anc_handV, anc_handVN, add_handV, distChamfer)
+                        collision_check(anc_handV[i].unsqueeze(0), anc_handVN[i].unsqueeze(0), add_handV[i].unsqueeze(0), distChamfer)
 
                 if collide_ids_add is not None:
-                    loss_col = contact_robustifier((add_handV[collide_ids_add[0], collide_ids_add[1]] -
-                    anc_handV[collide_ids_anchor[0], collide_ids_anchor[1]])).mean() 
-
-                    grad_col = grad(outputs=loss_col, inputs=x0_t_, retain_graph=True)[0]
+                    loss_col += contact_robustifier((add_handV[i, collide_ids_add[1]] -
+                        anc_handV[i, collide_ids_anchor[1]])).mean() * 1000
                 else:
-                    grad_col = torch.zeros_like(x0_t_)
+                    loss_col += 0.
 
-                grad_list.append(grad_col)
-            
-            tot_grad_col = torch.cat(grad_list, 0)
+            grad_col = grad(outputs=loss_col, inputs=x0_t_, retain_graph=True, allow_unused=True)[0]
+
+
+            loss_col = 0.
+
+            for i in range(anc_handV.shape[0]):
+                collide_ids_add, collide_ids_anchor = \
+                        collision_check(add_handV[i].unsqueeze(0), add_handVN[i].unsqueeze(0), anc_handV[i].unsqueeze(0), distChamfer)
+
+                if collide_ids_add is not None:
+                    loss_col += contact_robustifier((anc_handV[i, collide_ids_add[1]] -
+                        add_handV[i, collide_ids_anchor[1]])).mean() * 1000 
+                else:
+                    loss_col += 0.
+
+            grad_col += grad(outputs=loss_col, inputs=x0_t_, retain_graph=True, allow_unused=True)[0]
 
             scale = guidance_weights[idx]
-
+ 
             # use a low scale for the last iter
             if idx == len(seq) - 1:
-                scale /= 10
-                
-            x0_t = x0_t - scale * tot_grad_col * 100
+                s = torch.Tensor(np.asarray([scale for _ in range(64)])).cuda()
+                s[:-3] /= 10
+                x0_t = x0_t - s * grad_col
+
+            else:
+                x0_t = x0_t - scale * grad_col
 
         x0_preds.append(x0_t)
 

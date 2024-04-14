@@ -26,7 +26,7 @@ def polynomial_mmd_averages(codes_g, codes_r, n_subsets=50, subset_size=1000,
             bar.set_postfix({'mean': mmds[:i+1].mean()})
     return (mmds, vars) if ret_var else mmds
 
-def polynomial_mmd(codes_g, codes_r, degree=3, gamma=None, coef0=1,
+def polynomial_mmd(codes_g, codes_r, degree=1, gamma=None, coef0=1,
                    var_at_m=None, ret_var=True):
     # use  k(x, y) = (gamma <x, y> + coef0)^degree
     # default gamma is 1 / dim

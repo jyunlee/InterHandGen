@@ -132,7 +132,7 @@ def evaluate(exp, n_samples=10000, res='res', fast=False, p_batch=64):
     print("calculating KID...")
     kid = calculate_kid(gt_feats, pred_feats)
     (m, s) = kid
-    print('KID : %.3f (%.3f)\n' % (m, s))
+    print('KID : %.4f (%.4f)\n' % (m, s))
 
     dataset_diversity = calculate_diversity(gt_feats)
     generated_diversity = calculate_diversity(pred_feats)
@@ -143,8 +143,12 @@ def evaluate(exp, n_samples=10000, res='res', fast=False, p_batch=64):
         print("Skipping precision-recall calculation\n")
         precision = recall = None
     else:
+        # For precision-recall, use 1000 samples to match the original metric definition in MDM [Tevet et al., ICLR 2023].
+        # Since it's based on KNN, sample number affects the neighborhood size.
         print("calculating precision recall...")
-        precision, recall = precision_and_recall(pred_feats, gt_feats)
+
+        idx = torch.randperm(n_samples)[:1000]  
+        precision, recall = precision_and_recall(pred_feats[idx], gt_feats[idx])
         print(f"precision: {precision}")
         print(f"recall: {recall}\n")
 
@@ -153,36 +157,26 @@ def evaluate(exp, n_samples=10000, res='res', fast=False, p_batch=64):
     return metrics
 
 
-def evaluate_penetration(exp, n_samples=10000, res='res', gt=False):
+def evaluate_penetration(exp, idx, return_dict, res='res', gt=False):
 
     if gt:
         return NotImplementedError
     else:
         mesh_dir = osp.join('..', 'exp', exp, res, 'meshes')
 
-    pen_list = []
+    mesh = trimesh.load(osp.join(mesh_dir, f'mesh_{idx}.obj'), process=False)
+    
+    verts, faces = mesh.vertices, mesh.faces
 
-    mesh_list = np.asarray(os.listdir(mesh_dir))
-    perm = np.random.permutation(len(mesh_list))[:n_samples]
-    mesh_list = mesh_list[perm]
+    left_mesh = trimesh.Trimesh(verts[:778], faces[:1538], process=False)
+    right_mesh = trimesh.Trimesh(verts[778:], faces[1538:] - 778, process=False)
+    
+    try:
+        pen = trimesh.boolean.intersection([left_mesh, right_mesh]).volume
+    except:
+        pen = 0.
 
-    for mesh_path in tqdm(mesh_list):
-        mesh = trimesh.load(osp.join(mesh_dir, mesh_path), process=False)
-        
-        verts, faces = mesh.vertices, mesh.faces
-
-        left_mesh = trimesh.Trimesh(verts[:778], faces[:1538], process=False)
-        right_mesh = trimesh.Trimesh(verts[778:], faces[1538:] - 778, process=False)
-        
-        try:
-            pen = trimesh.boolean.intersection([left_mesh, right_mesh], engine='blender').volume
-        except:
-            pen = 0.
-
-        pen_list.append(pen)
-
-    penetration = sum(pen_list) / len(pen_list)
-    print(f'penetration: {penetration*10**6}')
+    return_dict[idx] = pen
 
 
 if __name__ == '__main__':
@@ -194,5 +188,25 @@ if __name__ == '__main__':
     evaluate(exp, n_samples)
 
     print(f'Start computing penetration for {n_samples} samples...')
-    evaluate_penetration(exp, n_samples)
+
+    # multi-processing by default
+    import multiprocessing
+
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+
+    jobs = []
+
+    for i in range(n_samples):
+        p = multiprocessing.Process(target=evaluate_penetration, args=(exp, i, return_dict))
+        jobs.append(p)
+        p.start()
+
+    for proc in tqdm(jobs):
+        proc.join()
+
+    pen_list = return_dict.values()
+    penetration = sum(pen_list) / len(pen_list)
+    print(f'penetration: {penetration*10**6}')
+    
     

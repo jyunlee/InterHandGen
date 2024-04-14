@@ -125,4 +125,3 @@ def collision_check(scene_v, scene_vn, human_vertices, distChamfer):
     return collide_ids_human, collide_ids_scene
 
 
-

@@ -16,7 +16,7 @@ torch.set_printoptions(sci_mode=False)
 def parse_args_and_config():
     parser = argparse.ArgumentParser(description=globals()["__doc__"])
     
-    parser.add_argument("--seed", type=int, default=19960905, help="Random seed")
+    parser.add_argument("--seed", type=int, default=19960911, help="Random seed")
     parser.add_argument("--config", type=str, default="default.yml", 
                         help="Path to the config file")
     parser.add_argument("--exp", type=str, default="exp", 

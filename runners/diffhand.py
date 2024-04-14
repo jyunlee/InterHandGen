@@ -583,6 +583,7 @@ class Diffhand(object):
 
                 total_manos[i].export(f'{mesh_dir}/mesh_{i}.obj')
 
+                '''
                 imgs, alphas = self.renderer.render(verts=torch.repeat_interleave(torch.Tensor(total_manos[i].vertices * 0.5).unsqueeze(0), self.n_views, 0), faces=torch.repeat_interleave(torch.Tensor(total_manos[i].faces).unsqueeze(0), self.n_views, 0), cameras=self.cameras, textures=self.texture, lights=self.point_lights)
 
                 res_imgs = []
@@ -600,5 +601,5 @@ class Diffhand(object):
                 res_img = cv.hconcat(res_imgs)
 
                 cv.imwrite(f'{img_dir}/img_{i}.png', res_img)
-
+                '''
         return
