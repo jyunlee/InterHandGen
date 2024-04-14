@@ -29,7 +29,7 @@
 
 <pre><code> $ cd utils
  $ git clone https://github.com/ThibaultGROUEIX/ChamferDistancePytorch.git
- $ mv ChamferDistancePytorch
+ $ mv ChamferDistancePytorch/chamfer3D
  $ python setup.py install </pre></code>
 
 3. Install [functorch](https://github.com/pytorch/functorch).
@@ -65,12 +65,6 @@ Sample two-hand interactions from the trained model. The number of samples can b
 
 <pre><code> $ CUDA_VISIBLE_DEVICES={<i>gpu_num</i>} python interhandgen.py --model_path {<i>trained_model_path</i>} </pre></code>
 
-<details>
-  <summary>📌 Note on anti-penetration guidance (APG)</summary>
-&nbsp;
-
-<i>In the current code version, APG significantly increases sampling time due to the per-sample gradient computations. To suppress APG, set `anti_pen` to `False` by modifying the config file (`configs/default.yml`). If you can use PyTorch 2.x, you can simply set `is_grads_batched=True` when calling `torch.autograd.grad` and remove the for-loop over the individual samples.</i>
-</details>
 &nbsp;
 
 ## Evaluation
