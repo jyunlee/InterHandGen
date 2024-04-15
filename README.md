@@ -19,7 +19,7 @@
 
 ## Updates  
 
-**[Apr 14th]** There was a bug in anti-penetration loss guidance weighting, and that part is now fixed. I am sorry for the inconvenience.
+**[Apr 14th 2024]** There was a bug in anti-penetration loss guidance weighting, and that part is now fixed. I am sorry for the inconvenience.
 
 &nbsp;
 
