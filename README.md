@@ -39,13 +39,6 @@
  $ mv ChamferDistancePytorch/chamfer3D
  $ python setup.py install </pre></code>
 
-3. Install [functorch](https://github.com/pytorch/functorch).
-
- <pre><code> $ git clone https://github.com/pytorch/functorch.git
- $ mv functorch
- $ git checkout 1.10
- $ python setup.py install </pre></code>
-
 &nbsp;
 
 ## Data Preparation 
