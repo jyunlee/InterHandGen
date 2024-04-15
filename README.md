@@ -17,6 +17,13 @@
 
 &nbsp;
 
+## Updates  
+
+**[Apr 14th]** There was a bug in anti-penetration loss guidance weighting, and this part is now fixed. I am sorry for the inconvenience.
+
+&nbsp;
+
+
 ## Environment Setup  
 
 1. Clone this repository and install the dependencies specified in `requirements.txt`.
